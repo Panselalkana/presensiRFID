@@ -1,56 +1,279 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <title>Presensi RFID</title>
-    <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 10px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 320px; }
-        input { width: 100%; padding: 10px; margin-top: 10px; box-sizing: border-box; text-align: center; }
-        .status { margin-top: 15px; padding: 10px; border-radius: 5px; font-weight: bold; display: none; }
-        .success { background: #d4edda; color: #155724; }
-        .error { background: #f8d7da; color: #721c24; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presensi RFID</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0e14;
+    --panel: #101722;
+    --line: #1d2733;
+    --accent: #35e0c9;
+    --accent-dim: rgba(53,224,201,0.15);
+    --text: #e7edf3;
+    --muted: #647184;
+    --danger: #ff5d6c;
+    --danger-dim: rgba(255,93,108,0.12);
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 50% 0%, #0f1621 0%, var(--bg) 55%);
+    font-family:'Space Grotesk', sans-serif;
+    color:var(--text);
+    padding:24px;
+  }
+
+  .terminal{
+    position:relative;
+    width:340px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:36px 30px 30px;
+    overflow:hidden;
+  }
+
+  .terminal::before{
+    content:"";
+    position:absolute;
+    top:0; left:0; right:0;
+    height:2px;
+    background:linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity:0.5;
+  }
+
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.08em;
+    color:var(--muted);
+    margin:0 0 4px;
+  }
+
+  .eyebrow span{ color:var(--accent); }
+
+  h1{
+    font-size:20px;
+    font-weight:600;
+    margin:0 0 26px;
+    letter-spacing:-0.01em;
+  }
+
+  .field{
+    position:relative;
+  }
+
+  .field-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    color:var(--muted);
+    letter-spacing:0.05em;
+    margin-bottom:8px;
+    display:block;
+  }
+
+  input{
+    width:100%;
+    background:#0c1119;
+    border:1px solid var(--line);
+    border-radius:3px;
+    color:var(--text);
+    font-family:'JetBrains Mono', monospace;
+    font-size:15px;
+    padding:14px 14px;
+    outline:none;
+    transition:border-color 0.15s ease, box-shadow 0.15s ease;
+    letter-spacing:0.02em;
+  }
+
+  input::placeholder{ color:var(--muted); }
+
+  input:focus{
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-dim);
+  }
+
+  .scanline{
+    position:absolute;
+    left:0; right:0; top:0;
+    height:100%;
+    pointer-events:none;
+    border-radius:3px;
+    overflow:hidden;
+  }
+
+  .scanline::after{
+    content:"";
+    position:absolute;
+    left:0; right:0;
+    height:40%;
+    background:linear-gradient(180deg, transparent, var(--accent-dim), transparent);
+    top:-40%;
+    transition:none;
+  }
+
+  .scanline.active::after{
+    animation:sweep 0.9s ease-in-out;
+  }
+
+  @keyframes sweep{
+    from{ top:-40%; }
+    to{ top:100%; }
+  }
+
+  .status{
+    margin-top:16px;
+    padding:12px 14px;
+    border-radius:3px;
+    font-size:13px;
+    font-weight:500;
+    display:none;
+    align-items:center;
+    gap:9px;
+    border:1px solid transparent;
+  }
+
+  .status.show{ display:flex; }
+
+  .status .dot{
+    width:7px; height:7px;
+    border-radius:50%;
+    flex:none;
+  }
+
+  .status.success{
+    background:var(--accent-dim);
+    border-color:rgba(53,224,201,0.3);
+    color:var(--accent);
+  }
+  .status.success .dot{ background:var(--accent); box-shadow:0 0 8px var(--accent); }
+
+  .status.error{
+    background:var(--danger-dim);
+    border-color:rgba(255,93,108,0.3);
+    color:var(--danger);
+  }
+  .status.error .dot{ background:var(--danger); box-shadow:0 0 8px var(--danger); }
+
+  .status.pending{
+    background:rgba(255,255,255,0.04);
+    border-color:var(--line);
+    color:var(--muted);
+  }
+  .status.pending .dot{
+    background:var(--muted);
+    animation:pulse 1s infinite ease-in-out;
+  }
+
+  @keyframes pulse{
+    0%,100%{ opacity:0.3; }
+    50%{ opacity:1; }
+  }
+
+  .foot{
+    margin-top:24px;
+    padding-top:16px;
+    border-top:1px solid var(--line);
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    color:var(--muted);
+    display:flex;
+    justify-content:space-between;
+    letter-spacing:0.04em;
+  }
+
+  .foot .live{
+    display:flex; align-items:center; gap:6px;
+  }
+
+  .foot .live::before{
+    content:"";
+    width:6px; height:6px;
+    border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 6px var(--accent);
+  }
+</style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>Presensi Tap Kartu</h2>
-        <input type="text" id="uidInput" placeholder="Scan Kartu..." autofocus autocomplete="off">
-        <div id="statusBox" class="status"></div>
+  <div class="terminal">
+    <p class="eyebrow">SISTEM PRESENSI <span>/ RFID</span></p>
+    <h1>Presensi Tap Kartu</h1>
+
+    <div class="field">
+      <span class="field-label">UID KARTU</span>
+      <div class="scanline" id="scanline">
+        <input type="text" id="uidInput" placeholder="Tempelkan kartu..." autofocus autocomplete="off">
+      </div>
     </div>
 
-    <script>
-        // GANTI URL DI BAWAH INI DENGAN URL WEB APP GOOGLE APPS SCRIPT KAMU
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyj1Utqebu_yv8C0ktGhZdneaHxYoNaQyFXFodGSpCKP5hBTO69LPcai1fSah5oELjB/exec";
+    <div id="statusBox" class="status">
+      <span class="dot"></span>
+      <span id="statusText"></span>
+    </div>
 
-        document.getElementById('uidInput').addEventListener('change', function() {
-            let uid = this.value.trim();
-            if(!uid) return;
+    <div class="foot">
+      <span class="live">Siap membaca</span>
+      <span id="clock"></span>
+    </div>
+  </div>
 
-            let statusBox = document.getElementById('statusBox');
-            statusBox.style.display = 'block';
-            statusBox.className = 'status';
-            statusBox.innerText = 'Memproses...';
+<script>
+  // GANTI URL DI BAWAH INI DENGAN URL WEB APP GOOGLE APPS SCRIPT KAMU
+  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyj1Utqebu_yv8C0ktGhZdneaHxYoNaQyFXFodGSpCKP5hBTO69LPcai1fSah5oELjB/exec";
 
-            fetch(`${APPS_SCRIPT_URL}?action=presensi&uid=${encodeURIComponent(uid)}`)
-                .then(res => res.json())
-                .then(data => {
-                    if(data.status === 'success') {
-                        statusBox.className = 'status success';
-                        statusBox.innerText = data.message;
-                    } else {
-                        statusBox.className = 'status error';
-                        statusBox.innerText = data.message;
-                    }
-                    document.getElementById('uidInput').value = '';
-                    document.getElementById('uidInput').focus();
-                })
-                .catch(err => {
-                    statusBox.className = 'status error';
-                    statusBox.innerText = 'Gagal terhubung ke server.';
-                });
-        });
-    </script>
+  const input = document.getElementById('uidInput');
+  const statusBox = document.getElementById('statusBox');
+  const statusText = document.getElementById('statusText');
+  const scanline = document.getElementById('scanline');
+
+  function setStatus(kind, message){
+    statusBox.className = 'status show ' + kind;
+    statusText.textContent = message;
+  }
+
+  input.addEventListener('change', function(){
+    let uid = this.value.trim();
+    if(!uid) return;
+
+    scanline.classList.remove('active');
+    void scanline.offsetWidth; // restart animation
+    scanline.classList.add('active');
+
+    setStatus('pending', 'Memproses...');
+
+    fetch(`${APPS_SCRIPT_URL}?action=presensi&uid=${encodeURIComponent(uid)}`)
+      .then(res => res.json())
+      .then(data => {
+        setStatus(data.status === 'success' ? 'success' : 'error', data.message);
+        input.value = '';
+        input.focus();
+      })
+      .catch(() => {
+        setStatus('error', 'Gagal terhubung ke server.');
+      });
+  });
+
+  function tick(){
+    const el = document.getElementById('clock');
+    if(el) el.textContent = new Date().toLocaleTimeString('id-ID', { hour12:false });
+  }
+  tick();
+  setInterval(tick, 1000);
+</script>
+
 </body>
 </html>
