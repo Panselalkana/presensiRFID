@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Presensi RFID</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 10px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 320px; }
+        input { width: 100%; padding: 10px; margin-top: 10px; box-sizing: border-box; text-align: center; }
+        .status { margin-top: 15px; padding: 10px; border-radius: 5px; font-weight: bold; display: none; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>Presensi Tap Kartu</h2>
+        <input type="text" id="uidInput" placeholder="Scan Kartu..." autofocus autocomplete="off">
+        <div id="statusBox" class="status"></div>
+    </div>
+
+    <script>
+        // GANTI URL DI BAWAH INI DENGAN URL WEB APP GOOGLE APPS SCRIPT KAMU
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyj1Utqebu_yv8C0ktGhZdneaHxYoNaQyFXFodGSpCKP5hBTO69LPcai1fSah5oELjB/exec";
+
+        document.getElementById('uidInput').addEventListener('change', function() {
+            let uid = this.value.trim();
+            if(!uid) return;
+
+            let statusBox = document.getElementById('statusBox');
+            statusBox.style.display = 'block';
+            statusBox.className = 'status';
+            statusBox.innerText = 'Memproses...';
+
+            fetch(`${APPS_SCRIPT_URL}?action=presensi&uid=${encodeURIComponent(uid)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if(data.status === 'success') {
+                        statusBox.className = 'status success';
+                        statusBox.innerText = data.message;
+                    } else {
+                        statusBox.className = 'status error';
+                        statusBox.innerText = data.message;
+                    }
+                    document.getElementById('uidInput').value = '';
+                    document.getElementById('uidInput').focus();
+                })
+                .catch(err => {
+                    statusBox.className = 'status error';
+                    statusBox.innerText = 'Gagal terhubung ke server.';
+                });
+        });
+    </script>
+</body>
+</html>
