@@ -216,16 +216,93 @@
   @media (prefers-reduced-motion: reduce){
     .ping.active::before{ animation: none; }
   }
+
+  /* ---- login ---- */
+  .hidden{ display:none !important; }
+
+  .login-field{ margin-bottom: 16px; }
+
+  .login-btn{
+    width:100%;
+    background: transparent;
+    color: var(--cyan);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    padding: 13px;
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor:pointer;
+    margin-top: 6px;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .login-btn:hover{ border-color: var(--cyan); background: rgba(79,216,255,0.06); }
+
+  .login-error{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--red);
+    margin-top: 12px;
+    display:none;
+  }
+  .login-error.show{ display:block; }
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom: 18px;
+  }
+  .logout-link{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    background:none;
+    border:none;
+    cursor:pointer;
+    letter-spacing: 0.04em;
+    padding: 0;
+  }
+  .logout-link:hover{ color: var(--red); }
 </style>
 </head>
 <body>
 
-  <div class="panel">
+  <!-- LAYAR LOGIN ADMIN -->
+  <div class="panel" id="loginPanel">
     <span class="corner-tl"></span><span class="corner-br"></span>
 
     <div class="eyebrow">
-      <span class="dot" id="nfcDot"></span>
-      <span id="nfcLabel">memeriksa dukungan NFC…</span>
+      <span class="dot on"></span>
+      <span>akses admin diperlukan</span>
+    </div>
+
+    <h1>Masuk</h1>
+    <p class="sub">Login sebagai admin untuk membuka panel presensi.</p>
+
+    <div class="login-field">
+      <label for="loginUser" style="display:block; font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--text-dim); margin-bottom:8px; letter-spacing:0.04em;">Username</label>
+      <input type="text" id="loginUser" placeholder="admin" autocomplete="off">
+    </div>
+    <div class="login-field">
+      <label for="loginPass" style="display:block; font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--text-dim); margin-bottom:8px; letter-spacing:0.04em;">Password</label>
+      <input type="password" id="loginPass" placeholder="••••••">
+    </div>
+
+    <button class="login-btn" onclick="cobaLogin()">Masuk</button>
+    <div class="login-error" id="loginError">Username atau password salah.</div>
+  </div>
+
+  <!-- PANEL PRESENSI (tersembunyi sampai login) -->
+  <div class="panel hidden" id="presensiPanel">
+    <span class="corner-tl"></span><span class="corner-br"></span>
+
+    <div class="topbar">
+      <div class="eyebrow" style="margin-bottom:0;">
+        <span class="dot" id="nfcDot"></span>
+        <span id="nfcLabel">memeriksa dukungan NFC…</span>
+      </div>
+      <button class="logout-link" onclick="logout()">keluar</button>
     </div>
 
     <h1>Presensi</h1>
@@ -252,9 +329,46 @@
   // =========================================================================
   const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx.../exec";
 
+  // =========================================================================
+  // LOGIN ADMIN (kredensial sederhana, hanya cocok untuk penggunaan internal)
+  // =========================================================================
+  const ADMIN_USER = "admin";
+  const ADMIN_PASS = "1234";
+
+  function cobaLogin() {
+    const user = document.getElementById('loginUser').value.trim();
+    const pass = document.getElementById('loginPass').value;
+    const errorBox = document.getElementById('loginError');
+
+    if (user === ADMIN_USER && pass === ADMIN_PASS) {
+      errorBox.classList.remove('show');
+      document.getElementById('loginPanel').classList.add('hidden');
+      document.getElementById('presensiPanel').classList.remove('hidden');
+      initNFC();
+    } else {
+      errorBox.classList.add('show');
+      document.getElementById('loginPass').value = '';
+    }
+  }
+
+  function logout() {
+    document.getElementById('presensiPanel').classList.add('hidden');
+    document.getElementById('loginPanel').classList.remove('hidden');
+    document.getElementById('loginUser').value = '';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginError').classList.remove('show');
+  }
+
+  document.getElementById('loginPass').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') cobaLogin();
+  });
+  document.getElementById('loginUser').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') cobaLogin();
+  });
+
   let ndefReader = null;
 
-  window.onload = function() {
+  function initNFC() {
     const dot = document.getElementById('nfcDot');
     const label = document.getElementById('nfcLabel');
     const btn = document.getElementById('btnAktifkanNFC');
