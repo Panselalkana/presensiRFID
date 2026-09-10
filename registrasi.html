@@ -1,63 +1,294 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrasi Kartu RFID</title>
-    <style>
-        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        select, input, button { width: 100%; padding: 12px; margin-top: 10px; box-sizing: border-box; border-radius: 6px; border: 1px solid #ccc; }
-        button { background: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; }
-        .status { margin-top: 15px; padding: 10px; border-radius: 6px; display: none; text-align: center; }
-        .success { background: #d4edda; color: #155724; }
-        .error { background: #f8d7da; color: #721c24; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registrasi — Kartu RFID</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #070b14;
+    --panel: #0d1420;
+    --line: rgba(150, 180, 220, 0.14);
+    --text: #dfe7f5;
+    --text-dim: #63728c;
+    --accent: #4fd8ff;
+    --green: #35e0a1;
+    --red: #ff6b7f;
+    --radius: 10px;
+  }
+
+  *{ box-sizing: border-box; margin:0; padding:0; }
+
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse 800px 500px at 50% 0%, rgba(79,216,255,0.09), transparent 65%),
+      var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 24px;
+  }
+
+  .panel{
+    width:100%;
+    max-width: 360px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-top: 2px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 34px 28px;
+  }
+
+  .hidden{ display:none !important; }
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom: 22px;
+  }
+
+  .tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  .logout-link{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding: 0;
+  }
+  .logout-link:hover{ color: var(--red); }
+
+  h1{
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+  }
+
+  .sub{
+    font-size: 13.5px;
+    color: var(--text-dim);
+    margin-bottom: 26px;
+    line-height: 1.5;
+  }
+
+  .field{ margin-bottom: 14px; }
+  .field label{
+    display:block;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  select, input[type="text"], input[type="password"]{
+    width:100%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text);
+    outline:none;
+    appearance: none;
+    transition: border-color 0.15s ease;
+  }
+  #uidInput{ font-family:'JetBrains Mono', monospace; }
+  select{
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234fd8ff' stroke-width='1.5' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 34px;
+  }
+  select option{ background: var(--panel); color: var(--text); }
+  input::placeholder{ color: #3c4759; }
+  select:focus, input:focus{ border-color: var(--accent); }
+
+  .btn{
+    width:100%;
+    border-radius: 8px;
+    padding: 13px;
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor:pointer;
+    border: none;
+    margin-top: 4px;
+  }
+  .btn-primary{
+    background: var(--accent);
+    color: #04101c;
+  }
+  .btn-primary:hover{ filter: brightness(1.08); }
+  .btn-ghost{
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--accent);
+  }
+  .btn-ghost:hover{ border-color: var(--accent); }
+
+  .msg{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    margin-top: 14px;
+    display:none;
+  }
+  .msg.show{ display:block; }
+  .msg-error{ color: var(--red); }
+
+  .status{
+    margin-top: 18px;
+    padding: 11px 13px;
+    border-radius: 8px;
+    border-left: 3px solid transparent;
+    background: rgba(255,255,255,0.02);
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.5;
+    display:none;
+    word-wrap: break-word;
+  }
+  .status.show{ display:block; }
+  .status-success{ border-color: var(--green); color: var(--green); }
+  .status-error{ border-color: var(--red); color: var(--red); }
+</style>
 </head>
 <body>
-    <div class="card">
-        <h2>Registrasi Kartu RFID</h2>
-        <select id="namaSelect"><option>Memuat daftar nama...</option></select>
-        <input type="text" id="uidInput" placeholder="Tap Kartu RFID Di Sini..." autocomplete="off">
-        <button onclick="prosesRegistrasi()">Daftarkan Kartu</button>
-        <div id="statusBox" class="status"></div>
+
+  <!-- LOGIN -->
+  <div class="panel" id="loginPanel">
+    <div class="topbar"><span class="tag">Akses Admin</span></div>
+
+    <h1>Masuk</h1>
+    <p class="sub">Login untuk membuka panel registrasi kartu.</p>
+
+    <div class="field">
+      <label for="loginUser">Username</label>
+      <input type="text" id="loginUser" placeholder="admin" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="loginPass">Password</label>
+      <input type="password" id="loginPass" placeholder="••••••">
     </div>
 
-    <script>
-        // GANTI DENGAN URL APPS SCRIPT KAMU
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx.../exec";
+    <button class="btn btn-primary" onclick="cobaLogin()">Masuk</button>
+    <div class="msg msg-error" id="loginError">Username atau password salah.</div>
+  </div>
 
-        window.onload = function() {
-            fetch(`${APPS_SCRIPT_URL}?action=getMahasiswa`)
-                .then(res => res.json())
-                .then(data => {
-                    let select = document.getElementById('namaSelect');
-                    select.innerHTML = '<option value="">-- Pilih Nama Mahasiswa --</option>';
-                    data.forEach(nama => {
-                        select.innerHTML += `<option value="${nama}">${nama}</option>`;
-                    });
-                });
-        };
+  <!-- REGISTRASI -->
+  <div class="panel hidden" id="registrasiPanel">
+    <div class="topbar">
+      <span class="tag">Registrasi Kartu</span>
+      <button class="logout-link" onclick="logout()">keluar</button>
+    </div>
 
-        function prosesRegistrasi() {
-            let nama = document.getElementById('namaSelect').value;
-            let uid = document.getElementById('uidInput').value.trim();
-            let statusBox = document.getElementById('statusBox');
+    <h1>Daftarkan Kartu</h1>
+    <p class="sub">Pilih nama, lalu tap atau ketik UID kartu.</p>
 
-            if(!nama || !uid) return alert("Pilih nama dan tap kartu!");
+    <div class="field">
+      <label for="namaSelect">Nama Mahasiswa</label>
+      <select id="namaSelect"><option>Memuat daftar nama…</option></select>
+    </div>
 
-            fetch(`${APPS_SCRIPT_URL}?action=registrasi&nama=${encodeURIComponent(nama)}&uid=${encodeURIComponent(uid)}`)
-                .then(res => res.json())
-                .then(data => {
-                    statusBox.style.display = 'block';
-                    statusBox.className = 'status ' + (data.status === 'success' ? 'success' : 'error');
-                    statusBox.innerText = data.message;
-                    if(data.status === 'success') {
-                        document.getElementById('uidInput').value = '';
-                        location.reload(); // Muat ulang agar nama terdaftar hilang dari pilihan
-                    }
-                });
+    <div class="field">
+      <label for="uidInput">UID Kartu</label>
+      <input type="text" id="uidInput" placeholder="Tap kartu RFID di sini…" autocomplete="off">
+    </div>
+
+    <button class="btn btn-primary" onclick="prosesRegistrasi()">Daftarkan Kartu</button>
+
+    <div id="statusBox" class="status"></div>
+  </div>
+
+<script>
+  // =========================================================================
+  // GANTI DENGAN URL APPS SCRIPT KAMU
+  // =========================================================================
+  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx.../exec";
+
+  // =========================================================================
+  // LOGIN ADMIN (kredensial sederhana, hanya cocok untuk penggunaan internal)
+  // =========================================================================
+  const ADMIN_USER = "admin";
+  const ADMIN_PASS = "1234";
+
+  function cobaLogin() {
+    const user = document.getElementById('loginUser').value.trim();
+    const pass = document.getElementById('loginPass').value;
+    const errorBox = document.getElementById('loginError');
+
+    if (user === ADMIN_USER && pass === ADMIN_PASS) {
+      errorBox.classList.remove('show');
+      document.getElementById('loginPanel').classList.add('hidden');
+      document.getElementById('registrasiPanel').classList.remove('hidden');
+      muatDaftarNama();
+    } else {
+      errorBox.classList.add('show');
+      document.getElementById('loginPass').value = '';
+    }
+  }
+
+  function logout() {
+    document.getElementById('registrasiPanel').classList.add('hidden');
+    document.getElementById('loginPanel').classList.remove('hidden');
+    document.getElementById('loginUser').value = '';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginError').classList.remove('show');
+  }
+
+  document.getElementById('loginPass').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') cobaLogin();
+  });
+  document.getElementById('loginUser').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') cobaLogin();
+  });
+
+  function muatDaftarNama() {
+    fetch(`${APPS_SCRIPT_URL}?action=getMahasiswa`)
+      .then(res => res.json())
+      .then(data => {
+        let select = document.getElementById('namaSelect');
+        select.innerHTML = '<option value="">-- Pilih Nama Mahasiswa --</option>';
+        data.forEach(nama => {
+          select.innerHTML += `<option value="${nama}">${nama}</option>`;
+        });
+      });
+  }
+
+  function prosesRegistrasi() {
+    let nama = document.getElementById('namaSelect').value;
+    let uid = document.getElementById('uidInput').value.trim();
+    let statusBox = document.getElementById('statusBox');
+
+    if (!nama || !uid) return alert("Pilih nama dan tap kartu!");
+
+    fetch(`${APPS_SCRIPT_URL}?action=registrasi&nama=${encodeURIComponent(nama)}&uid=${encodeURIComponent(uid)}`)
+      .then(res => res.json())
+      .then(data => {
+        statusBox.classList.add('show');
+        statusBox.className = 'status show ' + (data.status === 'success' ? 'status-success' : 'status-error');
+        statusBox.innerText = data.message;
+        if (data.status === 'success') {
+          document.getElementById('uidInput').value = '';
+          muatDaftarNama();
         }
-    </script>
+      });
+  }
+</script>
 </body>
 </html>
