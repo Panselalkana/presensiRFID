@@ -382,6 +382,11 @@
     }
   };
 
+ // 0. FUNGSI KONVERSI HEX KE DEC (TAMBAHKAN INI)
+  function hexToDec(hexStr) {
+    return parseInt(hexStr, 16).toString();
+  }
+
   // 1. FUNGSI UNTUK WEB NFC (HP ANDROID)
   async function mulaiScanNFC() {
     if ('NDEFReader' in window) {
@@ -403,7 +408,11 @@
 
         ndefReader.addEventListener('reading', ({ serialNumber }) => {
           if (serialNumber) {
-            let formattedUID = serialNumber.replace(/:/g, '').toUpperCase();
+            let cleanHex = serialNumber.replace(/:/g, '').toUpperCase();
+            
+            // Konversi nilai Hex HP (849C07DA) ke Dec (2224938218)
+            let formattedUID = hexToDec(cleanHex);
+            
             tampilkanStatus('Kartu terdeteksi — UID: ' + formattedUID, 'info');
             kirimPresensi(formattedUID);
           } else {
